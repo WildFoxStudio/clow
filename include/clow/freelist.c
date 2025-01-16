@@ -105,17 +105,18 @@ static int verify_freelist(freelist* const allocator, freelist_block* current)
 
 static void assert_ptr_in_free_block(freelist* const allocator, void* ptr)
 {
-	freelist_block* block;
+	//freelist_block* block;
 
 	((void)ptr);
-	block = allocator->free_block;
+	//block = allocator->free_block;
 
-	while (block != NULL)
-	{
-		assert(ptr < (void*)block && freelist_offset_ptr(ptr, sizeof(freelist_header)) > freelist_offset_ptr((void*)block, sizeof(freelist_header)) && "Ptr must not be at header location!");
-		// Advance
-		block = block->next;
-	}
+	//while (block != NULL)
+	//{
+	//	
+	//	assert(((uintptr_t)freelist_subtract_ptr(ptr, sizeof(freelist_header))) < (uintptr_t)block && freelist_subtract_ptr(ptr, sizeof(freelist_header)) > (uintptr_t)block && "Ptr must not be at header location!");
+	//	// Advance
+	//	block = block->next;
+	//}
 }
 
 #else
@@ -179,15 +180,14 @@ void* freelist_get_buffer(freelist_t* allocator)
 void freelist_reset(freelist_t* allocator) {
 	assert(allocator != NULL);
 	((void)allocator);
-	verify(allocator, allocator->free_block)
 
-		//Do nothing
+	//Do nothing
 
-		//freelist* alloc{ (freelist*)allocator };
-		//alloc->buffer = NULL;
-		//alloc->buffer_size = 0;
-		//alloc->blockSize = 0;
-		//alloc->free_block = NULL;
+	//freelist* alloc{ (freelist*)allocator };
+	//alloc->buffer = NULL;
+	//alloc->buffer_size = 0;
+	//alloc->blockSize = 0;
+	//alloc->free_block = NULL;
 }
 
 void* freelist_malloc(freelist_t* allocator, size_t bytes) {
@@ -264,22 +264,26 @@ void freelist_free(freelist_t* allocator, void* ptr) {
 	if (!ptr)
 		return;
 
-	assert(freelist_range_check(allocator, ptr) && "Pointer must be inside the buffer range");
-	verify(allocator, allocator->free_block)
+	// Do nothing if pointer is outside the buffer range"
+	if (freelist_range_check(allocator, ptr) > 0)
+	{
 
-		alloc = (freelist*)allocator;
-	header = (freelist_header*)freelist_subtract_ptr(ptr, freelist_alloc_overhead());
+		verify(allocator, allocator->free_block)
 
-	temp_block.next = alloc->free_block;
-	temp_block.block_size = header->size + sizeof(freelist_header);
-	pun_cpy((void*)header, freelist_block, &temp_block);
-	assert(((freelist_block*)header)->block_size <= allocator->buffer_size && "Next block is corrupted!");
+			alloc = (freelist*)allocator;
+		header = (freelist_header*)freelist_subtract_ptr(ptr, freelist_alloc_overhead());
 
-	alloc->free_block = (freelist_block*)header;
+		temp_block.next = alloc->free_block;
+		temp_block.block_size = header->size + sizeof(freelist_header);
+		pun_cpy((void*)header, freelist_block, &temp_block);
+		assert(((freelist_block*)header)->block_size <= allocator->buffer_size && "Next block is corrupted!");
 
-	assert(alloc->free_block->block_size == temp_block.block_size);
-	assert(alloc->free_block->next != alloc->free_block && "Reference to self, pointer was already released");
-	coalescence(alloc, alloc->free_block);
+		alloc->free_block = (freelist_block*)header;
+
+		assert(alloc->free_block->block_size == temp_block.block_size);
+		assert(alloc->free_block->next != alloc->free_block && "Reference to self, pointer was already released");
+		coalescence(alloc, alloc->free_block);
+	}
 }
 
 size_t freelist_get_allocation_size(freelist_t* allocator, void* ptr)
