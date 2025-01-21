@@ -331,6 +331,13 @@ void gpalloc_initialize(gpalloc_t* allocator, void* buffer, const size_t pool_si
 	gpalloc_emplace(allocator, allocation);
 }
 
+void gpalloc_destroy(gpalloc_t* allocator)
+{
+	assert(allocator != NULL);
+	free(allocator->allocation_array);
+	memset((void*)allocator, 0, sizeof(gpalloc_t));
+}
+
 void* gpalloc_malloc(gpalloc_t* allocator, size_t bytes, const size_t alignment) {
 
 	const size_t worstAlignmentSize = bytes + gpalloc_max(alignment, __alignof(gpalloc_allocation)) + sizeof(gpalloc_allocation);

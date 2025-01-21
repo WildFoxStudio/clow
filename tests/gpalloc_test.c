@@ -32,6 +32,8 @@ static void gpalloc_tests(void)
 		assert(((uintptr_t)allocation) % 8 == 0 && "Must be aligned!");
 
 		gpalloc_free(&gpa, allocation);
+
+		gpalloc_destroy(&gpa);
 	}
 
 	// Allocate 10 blocks with increasing alignment
@@ -63,7 +65,7 @@ static void gpalloc_tests(void)
 		for (i = 0; i < 10; i++) {
 			gpalloc_free(&gpa, allocations[i]);
 		}
-
+		gpalloc_destroy(&gpa);
 	}
 
 	// Allocate 10 blocks with increasing alignment
@@ -89,7 +91,7 @@ static void gpalloc_tests(void)
 		for (i = 0; i < 10; i++) {
 			gpalloc_free(&gpa, allocations[i]);
 		}
-
+		gpalloc_destroy(&gpa);
 	}
 }
 

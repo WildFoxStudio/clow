@@ -73,6 +73,9 @@ extern "C" {
 	/* Initialize the allocator. */
 	void gpalloc_initialize(gpalloc_t* allocator, void* buffer, const size_t poolSize);
 
+	/* Deinitialize the allocator. */
+	void gpalloc_destroy(gpalloc_t* allocator);
+
 	/* Allocates memory from the allocator if has any. */
 	void* gpalloc_malloc(gpalloc_t* allocator, const size_t bytes, const size_t alignment);
 
