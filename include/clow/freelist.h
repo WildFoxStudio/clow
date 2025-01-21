@@ -8,6 +8,7 @@
 // DESCRIPTION: A freelist is a pool allocator that internally tracks free 
 // space using a linked list where each allocation has some little overhead, 
 // and input buffer must be allocated externally.
+// It uses first fit algorithm and does not take into account alignment.
 // 
 // LICENSE: BSD-2
 // Copyright (c) 2025, Kirichenko Stanislav
