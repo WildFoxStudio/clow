@@ -10,3 +10,7 @@ include_directories("../include")
 # Tests
 add_executable(freelist_tests freelist_test.c)
 target_include_directories(freelist_tests PUBLIC "../include")
+
+# Tests
+add_executable(gpalloc_tests gpalloc_test.c)
+target_include_directories(gpalloc_tests PUBLIC "../include")

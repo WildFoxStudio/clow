@@ -7,6 +7,7 @@ project(clow C)
 # Set the library source files
 set(SOURCES
     include/clow/freelist.c
+    include/clow/gpalloc.c
 )
 
 # Add the library target
