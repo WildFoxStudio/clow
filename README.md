@@ -10,8 +10,8 @@ Written in ANSI C, compliant to all C version up to C17 (at least what I've test
 
 ### Features
 
-- `freelist` Basically a non fixed size slab allocator with linked list tracking of free memory.
-
+- `freelist` Basically a non fixed size slab allocator with internal linked list tracking of free memory.
+- `gpalloc` General purpose allocator with external linked list tracking of free memory with alignment in mind.
 
 ### Usage
 
