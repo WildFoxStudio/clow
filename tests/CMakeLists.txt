@@ -14,3 +14,7 @@ target_include_directories(freelist_tests PUBLIC "../include")
 # Tests
 add_executable(gpalloc_tests gpalloc_test.c)
 target_include_directories(gpalloc_tests PUBLIC "../include")
+
+# Tests
+add_executable(slice_tests slice_test.c)
+target_include_directories(slice_tests PUBLIC "../include")
