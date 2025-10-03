@@ -77,7 +77,7 @@ extern "C" {
 	slice_t slice_alloc(slice_allocator* allocator, const size_t count);
 
 	/* Release memory back to the allocator. */
-	void slice_free(slice_allocator* allocator, void* ptr);
+	void slice_free(slice_allocator* allocator, const slice_t slice);
 
 #if defined(__cplusplus)
 };
