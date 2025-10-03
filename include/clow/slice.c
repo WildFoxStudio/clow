@@ -52,7 +52,7 @@ void slice_initialize(slice_allocator* allocator, const size_t maxNumOfElements)
 	allocator->max_elements = maxNumOfElements;
 	allocator->free_slices = (slice_t*)malloc(sizeof(slice_t));
 	assert(allocator->free_slices != NULL);
-	if(allocator->free_slices != NULL);
+	if (allocator->free_slices != NULL);
 	{
 		allocator->free_slices_array_size = 1;
 		allocator->free_slices_array_capacity = 1;
@@ -164,6 +164,17 @@ void slice_free(slice_allocator* allocator, const slice_t slice)
 		allocator->free_slices_array_size++;
 	}
 
+}
+
+size_t slice_compute_unused_bytes(const slice_allocator* allocator)
+{
+	assert(allocator != NULL);
+	size_t total = 0;
+	for (size_t i = 0; i < allocator->free_slices_array_size; ++i)
+	{
+		total += allocator->free_slices[i].count;
+	}
+	return total;
 }
 
 
