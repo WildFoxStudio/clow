@@ -12,6 +12,7 @@ Written in ANSI C, compliant to all C version up to C17 (at least what I've test
 
 - `freelist` Basically a non fixed size slab allocator with internal linked list tracking of free memory.
 - `gpalloc` General purpose allocator with external linked list tracking of free memory with alignment in mind.
+- `slice` Index based slice allocator with binary search and coalescence tracking of free slices.
 
 ### Usage
 
