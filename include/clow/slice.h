@@ -80,7 +80,7 @@ extern "C" {
 	void slice_free(slice_allocator* allocator, const slice_t slice);
 
 	/* Loops through all the free slices and returns the sum of the count */
-	size_t slice_compute_unused_bytes(const slice_allocator* allocator);
+	size_t slice_compute_unused_count(const slice_allocator* allocator);
 
 #if defined(__cplusplus)
 };

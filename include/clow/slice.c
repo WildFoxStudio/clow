@@ -166,7 +166,7 @@ void slice_free(slice_allocator* allocator, const slice_t slice)
 
 }
 
-size_t slice_compute_unused_bytes(const slice_allocator* allocator)
+size_t slice_compute_unused_count(const slice_allocator* allocator)
 {
 	assert(allocator != NULL);
 	size_t total = 0;
