@@ -1,10 +1,10 @@
 // //////////////////////////////////////////////////////////////////////////////////////////
 // FILE: slice.c
-// 
+//
 // AUTHOR: Kirichenko Stanislav
-// 
+//
 // DATE: 3 OCT 2025
-// 
+//
 // LICENSE: BSD-2
 // Copyright (c) 2025, Kirichenko Stanislav
 // All rights reserved.
@@ -36,152 +36,144 @@
 #include "clow/slice.h"
 
 #include <assert.h>
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdbool.h>
 
-void slice_initialize(slice_allocator* allocator, const size_t maxNumOfElements)
+void
+slice_initialize(slice_allocator* allocator, const size_t maxNumOfElements)
 {
-	// Must be zero initialized
-	assert(allocator != NULL);
-	assert(maxNumOfElements > 0);
-	assert(allocator->free_slices == NULL);
-	assert(allocator->free_slices_array_size == 0);
+    // Must be zero initialized
+    assert(allocator != NULL);
+    assert(maxNumOfElements > 0);
+    assert(allocator->free_slices == NULL);
+    assert(allocator->free_slices_array_size == 0);
 
-	allocator->max_elements = maxNumOfElements;
-	allocator->free_slices = (slice_t*)malloc(sizeof(slice_t));
-	assert(allocator->free_slices != NULL);
-	if (allocator->free_slices != NULL);
-	{
-		allocator->free_slices_array_size = 1;
-		allocator->free_slices_array_capacity = 1;
+    allocator->max_elements = maxNumOfElements;
+    allocator->free_slices  = (slice_t*)malloc(sizeof(slice_t));
+    assert(allocator->free_slices != NULL);
+    if (allocator->free_slices != NULL)
+        ;
+    {
+        allocator->free_slices_array_size     = 1;
+        allocator->free_slices_array_capacity = 1;
 
-		allocator->free_slices[0].offset = 0;
-		allocator->free_slices[0].count = maxNumOfElements;
-	}
+        allocator->free_slices[0].offset = 0;
+        allocator->free_slices[0].count  = maxNumOfElements;
+    }
 }
 
-void slice_destroy(slice_allocator* allocator)
+void
+slice_destroy(slice_allocator* allocator)
 {
-	assert(allocator != NULL);
-	free(allocator->free_slices);
-	allocator->free_slices = NULL;
-	allocator->free_slices_array_size = 0;
-	allocator->max_elements = 0;
+    assert(allocator != NULL);
+    free(allocator->free_slices);
+    allocator->free_slices            = NULL;
+    allocator->free_slices_array_size = 0;
+    allocator->max_elements           = 0;
 }
 
-slice_t slice_alloc(slice_allocator* allocator, const size_t count)
+slice_t
+slice_alloc(slice_allocator* allocator, const size_t count)
 {
-	assert(allocator != NULL);
-	if (allocator->free_slices == NULL)
-	{
-		slice_t invalid = { .offset = 0, .count = 0 };
-		return invalid;
-	}
+    assert(allocator != NULL);
+    assert(count > 0);
+    if (allocator->free_slices == NULL)
+        {
+            slice_t invalid = { .offset = 0, .count = 0 };
+            return invalid;
+        }
 
-	// Find the first slice that fits
-	for (size_t i = 0; i < allocator->free_slices_array_size; ++i)
-	{
-		slice_t* current_slice = &allocator->free_slices[i];
-		if (current_slice->count == count)
-		{
-			// Exact match, remove the slice from the free list
-			slice_t allocated_slice = *current_slice;
-			// Shift remaining slices down
-			memmove(&allocator->free_slices[i], &allocator->free_slices[i + 1],
-				(allocator->free_slices_array_size - i - 1) * sizeof(slice_t));
-			allocator->free_slices_array_size--;
-			return allocated_slice;
-		}
-		else if (current_slice->count > count)
-		{
-			// Allocate from the beginning of the slice
-			slice_t allocated_slice = { .offset = current_slice->offset, .count = count };
-			current_slice->offset += count;
-			current_slice->count -= count;
-			return allocated_slice;
-		}
-	}
+    // Find the first slice that fits
+    for (size_t i = 0; i < allocator->free_slices_array_size; ++i)
+        {
+            slice_t* current_slice = &allocator->free_slices[i];
+            if (current_slice->count == count)
+                {
+                    // Exact match, remove the slice from the free list
+                    slice_t allocated_slice = *current_slice;
+                    // Shift remaining slices down
+                    memmove(&allocator->free_slices[i], &allocator->free_slices[i + 1], (allocator->free_slices_array_size - i - 1) * sizeof(slice_t));
+                    allocator->free_slices_array_size--;
+                    return allocated_slice;
+                }
+            else if (current_slice->count > count)
+                {
+                    // Allocate from the beginning of the slice
+                    slice_t allocated_slice = { .offset = current_slice->offset, .count = count };
+                    current_slice->offset += count;
+                    current_slice->count -= count;
+                    return allocated_slice;
+                }
+        }
 
-	slice_t invalid = { .offset = 0, .count = 0 };
-	return invalid;
+    slice_t invalid = { .offset = 0, .count = 0 };
+    return invalid;
 }
 
-void slice_free(slice_allocator* allocator, const slice_t slice)
+void
+slice_free(slice_allocator* allocator, const slice_t slice)
 {
-	assert(allocator != NULL);
-	assert(slice.count > 0);
+    assert(allocator != NULL);
+    assert(slice.count > 0);
 
-	// Find the correct position to insert the freed slice
-	size_t insert_index = 0;
-	while (insert_index < allocator->free_slices_array_size &&
-		allocator->free_slices[insert_index].offset < slice.offset)
-	{
-		insert_index++;
-	}
-	// Check for merging with previous slice
-	if (insert_index > 0 &&
-		allocator->free_slices[insert_index - 1].offset + allocator->free_slices[insert_index - 1].count == slice.offset)
-	{
-		allocator->free_slices[insert_index - 1].count += slice.count;
-		// Check for merging with next slice
-		if (insert_index < allocator->free_slices_array_size &&
-			slice.offset + slice.count == allocator->free_slices[insert_index].offset)
-		{
-			allocator->free_slices[insert_index - 1].count += allocator->free_slices[insert_index].count;
-			// Remove the next slice
-			memmove(&allocator->free_slices[insert_index], &allocator->free_slices[insert_index + 1],
-				(allocator->free_slices_array_size - insert_index - 1) * sizeof(slice_t));
-			allocator->free_slices_array_size--;
-		}
-	}
-	else if (insert_index < allocator->free_slices_array_size &&
-		slice.offset + slice.count == allocator->free_slices[insert_index].offset)
-	{
-		// Merge with next slice
-		allocator->free_slices[insert_index].offset = slice.offset;
-		allocator->free_slices[insert_index].count += slice.count;
-	}
-	else
-	{
-		// Insert new slice
-		if (allocator->free_slices_array_size == allocator->free_slices_array_capacity)
-		{
-			size_t new_capacity = allocator->free_slices_array_capacity * 2;
-			slice_t* new_array = (slice_t*)realloc(allocator->free_slices, new_capacity * sizeof(slice_t));
-			if (new_array == NULL)
-			{
-				// Handle allocation failure (out of memory)
-				return;
-			}
-			allocator->free_slices = new_array;
-			allocator->free_slices_array_capacity = new_capacity;
-		}
-		memmove(&allocator->free_slices[insert_index + 1], &allocator->free_slices[insert_index],
-			(allocator->free_slices_array_size - insert_index) * sizeof(slice_t));
-		allocator->free_slices[insert_index] = slice;
-		allocator->free_slices_array_size++;
-	}
+    size_t insert_index = 0;
+    while (insert_index < allocator->free_slices_array_size && allocator->free_slices[insert_index].offset < slice.offset)
+        {
+            insert_index++;
+        }
 
+    // Try merge with previous
+    if (insert_index > 0 && allocator->free_slices[insert_index - 1].offset + allocator->free_slices[insert_index - 1].count == slice.offset)
+        {
+            allocator->free_slices[insert_index - 1].count += slice.count;
+
+            // Also try merge with next
+            if (insert_index < allocator->free_slices_array_size && slice.offset + slice.count == allocator->free_slices[insert_index].offset)
+                {
+                    allocator->free_slices[insert_index - 1].count += allocator->free_slices[insert_index].count;
+
+                    memmove(&allocator->free_slices[insert_index], &allocator->free_slices[insert_index + 1], (allocator->free_slices_array_size - insert_index - 1) * sizeof(slice_t));
+
+                    allocator->free_slices_array_size--;
+                }
+            return;
+        }
+
+    // Try merge with next only
+    if (insert_index < allocator->free_slices_array_size && slice.offset + slice.count == allocator->free_slices[insert_index].offset)
+        {
+            allocator->free_slices[insert_index].offset = slice.offset;
+            allocator->free_slices[insert_index].count += slice.count;
+            return;
+        }
+
+    // Otherwise insert new slice
+    if (allocator->free_slices_array_size == allocator->free_slices_array_capacity)
+        {
+            size_t   new_capacity = allocator->free_slices_array_capacity ? allocator->free_slices_array_capacity * 2 : 8;
+            slice_t* new_array    = (slice_t*)realloc(allocator->free_slices, new_capacity * sizeof(slice_t));
+            if (!new_array)
+                return; // OOM
+            allocator->free_slices                = new_array;
+            allocator->free_slices_array_capacity = new_capacity;
+        }
+
+    memmove(&allocator->free_slices[insert_index + 1], &allocator->free_slices[insert_index], (allocator->free_slices_array_size - insert_index) * sizeof(slice_t));
+
+    allocator->free_slices[insert_index] = slice;
+    allocator->free_slices_array_size++;
 }
 
-size_t slice_compute_unused_count(const slice_allocator* allocator)
+size_t
+slice_compute_unused_count(const slice_allocator* allocator)
 {
-	assert(allocator != NULL);
-	size_t total = 0;
-	for (size_t i = 0; i < allocator->free_slices_array_size; ++i)
-	{
-		total += allocator->free_slices[i].count;
-	}
-	return total;
+    assert(allocator != NULL);
+    size_t total = 0;
+    for (size_t i = 0; i < allocator->free_slices_array_size; ++i)
+        {
+            total += allocator->free_slices[i].count;
+        }
+    return total;
 }
-
-
-
-
-
-
-
-
-
